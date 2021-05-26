@@ -2,6 +2,7 @@ class Tabelas { //cria a calsse Tabelas
     init(conexao) { //cria um método chamado init que requer um parametro conexao
         this.conexao = conexao //a conexão ta tabela(this.conexao) é definida como a conexao que é recebida como parametro do método init
         this.criarAtendimentos() //utiliza o método criarAtendimentos da classe Tabela 
+        this.crairPets()
     }
 
     criarAtendimentos() {  //cria um método chamado criarAtendimentos que não requer parametros
@@ -16,6 +17,17 @@ class Tabelas { //cria a calsse Tabelas
             }
         })
     }
-}
 
+    crairPets() {
+        const query = 'CREATE TABLE IF NOT EXISTS Pets (id int NOT NULL AUTO_INCREMENT, nome varchar(50), imagem varchar (200), PRIMARY KEY (id))'
+
+        this.conexao.query(query, erro => {
+            if(erro){
+                console.log(erro)
+            } else {
+                console.log("Tabela PET foi criada com sucesso")
+            }
+        })
+    }
+} 
 module.exports = new Tabelas //exporta o módulo nova tabela
