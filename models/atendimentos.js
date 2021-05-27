@@ -1,3 +1,4 @@
+const { default: axios } = require('axios')
 const moment = require('moment') //puxa o módulo moment pra format
 const conexao = require('../infraestrutura/conexao') //puxa a conexão 
 
@@ -35,7 +36,8 @@ class Atendimento { //cria uma classse chama atendimeno
                 if(erro) {
                     res.status(400).json(erro) //se existir erro mostra o erro para o client junto do código 400
                 } else {
-                    res.status(201).json(atendimento) //se obter sucesso retorna o atenidmento preenchido pelo client para o mesmo
+                    const id = resultados.insertId
+                    res.status(201).json({...atendimento, id}) //se obter sucesso retorna o atenidmento preenchido pelo client para o mesmo
                 }
             })
         }
@@ -56,11 +58,14 @@ class Atendimento { //cria uma classse chama atendimeno
     buscaPorId(id, res){ //cria um método para buscar um atendimento específico por ID
         const sql = `SELECT * FROM Atendimentos WHERE id=${id}` //comando sql para selecionar tudo da tabela atendimentos em que o id seja igual o id requisitado pelo client
 
-        conexao.query(sql, (erro, resultados) => { //faz a conexao sql e pede erro ou resulatados
+        conexao.query(sql, async (erro, resultados) => { //faz a conexao sql e pede erro ou resulatados
             const atendimento = resultados[0] //define que o atendimento requirido é só o primeiro resultado no array para não mostrar os colchetes
+            const cpf = atendimento.cliente //define o cpf como o campo cliente do atendimento
             if(erro){
                 res.status(400).json(erro) // se houver erro mostra o erro para o cliente
             }else{
+                const { data } = await axios.get(`http://localhost:8082/${cpf}`) // data =cliente com cpf ///// busca o cliente com o cpf com o uso de uma outra api
+                atendimento.cliente = data // define o parametro cliente do atenimento como o cliente com o determinado cpf achado na outra api
                 res.status(200).json(atendimento) //se não houver erro mostra o atendimento requisitado pelo cliente
             }
         })
