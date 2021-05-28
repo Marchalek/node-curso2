@@ -1,6 +1,6 @@
 const customExpress = require("./Config/customExpress")  //puxa as configurações do arquivo custom express
-const conexao = require("./infraestrutura/conexao") //puxa a configuração de conexão da  api
-const Tabelas = require("./infraestrutura/tabelas") //puxa a configuração de tabelas do mysql
+const conexao = require("./infraestrutura/database/conexao") //puxa a configuração de conexão da  api
+const Tabelas = require("./infraestrutura/database/tabelas") //puxa a configuração de tabelas do mysql
 conexao.connect(erro => {  //faz a conexão
     if (erro) {
         console.log(erro)  //loga um erro no console caso não consia fazer a conexão

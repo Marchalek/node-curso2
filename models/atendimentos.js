@@ -1,58 +1,61 @@
 const { default: axios } = require('axios')
 const moment = require('moment') //puxa o módulo moment pra format
-const conexao = require('../infraestrutura/conexao') //puxa a conexão 
+const conexao = require('../infraestrutura/database/conexao') //puxa a conexão 
+const repositorio = require ('../repositorios/atendimento') //puxa o repositorio
 
 class Atendimento { //cria uma classse chama atendimeno
-    adiciona(atendimento, res) { //cria um método chamado adiciona pra adicionar um novo atendimento na tabela Atendimentos do mysql
-        const dataCriacao = moment().format('YYYY-MM-DD HH:MM:SS') //puxa a data do sistema como a data da criação
-        const data = moment(atendimento.data, 'DD/MM/YYYY').format('YYYY-MM-DD HH:MM:SS') //definie o parametro data com o formato de datetime
+    constructor () {
+        this.dataEhValida =({data, dataCriacao}) => moment(data).isSameOrAfter(dataCriacao) //checa se a data é valida verificando se data marcada é igual ou superior a data de criação do atendimento
+        this.clienteEhValido = ({tamanho}) => tamanho >=5 //checa se o nome do cliente tem o mínimo de 5 caracteres para ser considerado valido
 
-        const dataEhValida = moment(data).isSameOrAfter(dataCriacao) //checa se a data é valida verificando se data marcada é igual ou superior a data de criação do atendimento
-        const clienteEhValido = atendimento.cliente.length >=5 //checa se o nome do cliente tem o mínimo de 5 caracteres para ser considerado valido
+        this.valida = parametros => this.validacoes.filter(campo =>{
+            const {nome} = campo
+            const parametro = parametros[nome]
 
-        const validacoes = [  //faz as validações das checagens em cima
+            return !campo.valido(parametro)
+        })
+
+        this.validacoes = [  //faz as validações das checagens em cima
             {
                 nome: 'data',
-                valido: dataEhValida,
+                valido: this.dataEhValida,
                 mensagem: 'Data deve ser maior ou igual a data atual'
             },
             {
                 nome: 'cliente',
-                valido: clienteEhValido,
+                valido: this.clienteEhValido,
                 mensagem: 'Cliente deve ter pelo menos cinco caracteres'
             }
         ]
+    }
+    
+    adiciona(atendimento) { //cria um método chamado adiciona pra adicionar um novo atendimento na tabela Atendimentos do mysql
 
-        const erros = validacoes.filter(campo => !campo.valido) //conta o número de erros de acordo com o boolean do campo valido passado pra not (se for true que tem erro mostra como false e adiciona no contador que é o length)
+        const dataCriacao = moment().format('YYYY-MM-DD HH:MM:SS') //puxa a data do sistema como a data da criação
+        const data = moment(atendimento.data, 'DD/MM/YYYY').format('YYYY-MM-DD HH:MM:SS') //definie o parametro data com o formato de datetime
+
+        const parametros = {
+            data: {data, dataCriacao},
+            cliente: {tamanho : atendimento.cliente.length }
+        }
+
+        const erros = this.valida(parametros)
         const existemErros = erros.length // checa se existem erros no atendimento verificando o contador erros
+
         if(existemErros) { //se exisitirem erros
-            res.status(400).json(erros) //mostra pra o client o código http 400 de erro e mostra o erro pra ele
+            return new Promise((resolve, reject) => reject(erros))
         } else {     // caso não exista erros
             const atendimentoDatado = {...atendimento, dataCriacao,data} //puxa os campos de atendimento mais os campos datacriacao e data
 
-            const sql = 'INSERT INTO Atendimentos SET ?' //comando sql para inserir uma nova "tabela" dentro de Atenidmentos
-
-            conexao.query(sql, atendimentoDatado, (erro, resultados) => { //faz a conexão usando o comando sql, os campos de atendimentoDatado e pede err e resultados
-                if(erro) {
-                    res.status(400).json(erro) //se existir erro mostra o erro para o client junto do código 400
-                } else {
+            return repositorio.adiciona(atendimentoDatado).then(resultados => {
                     const id = resultados.insertId
-                    res.status(201).json({...atendimento, id}) //se obter sucesso retorna o atenidmento preenchido pelo client para o mesmo
-                }
-            })
+                    return ({...atendimento, id})
+                })
         }
     }
 
-    lista(res){ //cria um método para listar todos os atendimentos 
-        const sql = 'SELECT * FROM Atendimentos' //comando sql para selecionar todos os itens da tabela atendimentos
-
-        conexao.query(sql, (erro, resultados) => { //faz a conexao com o comando sql e pede erro e reulstados
-            if (erro){ //se exisitr erro mostra o erro
-                res.status(400).json(erro,)
-            }else{ //se não houber erro mostra o resultado
-                res.status(200).json(resultados)
-            }
-        })
+    lista(){ //cria um método para listar todos os atendimentos 
+        return repositorio.lista
     }
 
     buscaPorId(id, res){ //cria um método para buscar um atendimento específico por ID

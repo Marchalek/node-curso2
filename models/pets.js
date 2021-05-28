@@ -1,5 +1,5 @@
-const conexao = require('../infraestrutura/conexao') //puxa o arquivo conexão para linkar com o servidor
-const uploadDeArquivo = require('../arquivos/uploadDeArquivos') //puxa o módulo de upload de arquivos criado anteriormente
+const conexao = require('../infraestrutura/database/conexao') //puxa o arquivo conexão para linkar com o servidor
+const uploadDeArquivo = require('../infraestrutura/arquivos/uploadDeArquivos') //puxa o módulo de upload de arquivos criado anteriormente
 class Pet { //cria a calsse Pet
     adiciona(pet, res) { //método adiciona
         const query = 'INSERT INTO Pets SET ?' //comando sql

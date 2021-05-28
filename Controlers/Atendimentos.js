@@ -3,7 +3,9 @@ const Atendimento = require('../models/atendimentos')
 
 module.exports = app => { //exporta oq vem a seguir
     app.get('/atendimentos', (req, res) => {  // GET = busca algo, busca a lista de atendimentos
-        Atendimento.lista(res) //devolve como resposta a lista de atendimentos utilziando o método lista
+        Atendimento.lista() //devolve como resposta a lista de atendimentos utilziando o método lista
+            .then(reusltados => res.status(201).json(reusltados))
+            .catch( erros => res.status(400).json(erros))
     })
 
     app.get('/atendimentos/:id', (req, res) => {  // busca um atendimento especifico com o id colocado apos a barra
@@ -13,7 +15,9 @@ module.exports = app => { //exporta oq vem a seguir
 
     app.post('/atendimentos', (req, res) => { //POST = publciar algo, registra um novo atendimento
         const atendimento=  req.body  //define atendimento como o corpo/body da requisição
-        Atendimento.adiciona(atendimento, res) //usa o método adiciona para adicionar esse atendimento preenchido no corpo/body da requisição
+        Atendimento.adiciona(atendimento) //usa o método adiciona para adicionar esse atendimento preenchido no corpo/body da requisição
+            .then(atendimentoCadastrado => res.status(201).json(atendimentoCadastrado))
+            .catch(erros => res.status(400).json(erros))
         })
 
     app.patch('/atendimentos/:id', (req, res) =>{ //PATCH = altera algo, altera uma parte do nosso atendimento deterrminado pelo id
